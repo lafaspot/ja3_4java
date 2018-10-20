@@ -6,4 +6,7 @@
   <packaging>pom</packaging>
   <name>${project.artifactId}</name>
   <description>JA3 java library</description>
+  <modules>
+  	<module>ja3</module>
+  </modules>
 </project>
