@@ -65,7 +65,7 @@
         <jacoco-maven-plugin.version>0.7.5.201505241946</jacoco-maven-plugin.version>
         <main.basedir>${project.basedir}</main.basedir>
         <testTimeLimitInSeconds>5</testTimeLimitInSeconds>
-        <checkstyle.maxAllowedViolations>20</checkstyle.maxAllowedViolations>
+        <checkstyle.maxAllowedViolations>25</checkstyle.maxAllowedViolations>
     </properties>
 
 
