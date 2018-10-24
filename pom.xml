@@ -65,7 +65,7 @@
         <jacoco-maven-plugin.version>0.7.5.201505241946</jacoco-maven-plugin.version>
         <main.basedir>${project.basedir}</main.basedir>
         <testTimeLimitInSeconds>5</testTimeLimitInSeconds>
-        <checkstyle.maxAllowedViolations>10</checkstyle.maxAllowedViolations>
+        <checkstyle.maxAllowedViolations>20</checkstyle.maxAllowedViolations>
     </properties>
 
 
@@ -456,7 +456,7 @@
                             <propertyExpansion>config_loc=${main.basedir}</propertyExpansion>
                             <suppressionsLocation>checkstyle_suppressions.xml</suppressionsLocation>
                             <suppressionsFileExpression>checkstyle.suppressions.file</suppressionsFileExpression>
-                            <maxAllowedViolations>10</maxAllowedViolations>
+                            <maxAllowedViolations>20</maxAllowedViolations>
                         </configuration>
                         <goals>
                             <goal>check</goal>

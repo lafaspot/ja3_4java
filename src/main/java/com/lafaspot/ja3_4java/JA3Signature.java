@@ -7,7 +7,7 @@ import java.nio.ByteBuffer;
  * Generates JA3 signature based on the implementation described at https://github.com/salesforce/ja3.
  *
  */
-public class JA3Signature {
+public final class JA3Signature {
     /**
      * Handshake byte.
      */
@@ -23,7 +23,7 @@ public class JA3Signature {
 
     /**
      * Values to account for GREASE (Generate Random Extensions And Sustain Extensibility) as described here:
-     * https://tools.ietf.org/html/draft-davidben-tls-grease-01
+     * https://tools.ietf.org/html/draft-davidben-tls-grease-01.
      */
     private static final int[] GREASE = new int[] { 0x0a0a, 0x1a1a, 0x2a2a, 0x3a3a, 0x4a4a, 0x5a5a, 0x6a6a, 0x7a7a, 0x8a8a, 0x9a9a, 0xaaaa, 0xbaba,
             0xcaca, 0xdada, 0xeaea, 0xfafa };
@@ -184,8 +184,9 @@ public class JA3Signature {
      */
     private static boolean isNotGrease(final int value) {
         for (int i = 0; i < GREASE.length; i++) {
-            if (value == GREASE[i])
+            if (value == GREASE[i]) {
                 return false;
+            }
         }
 
         return true;

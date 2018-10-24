@@ -6,7 +6,7 @@ package com.lafaspot.ja3_4java;
  *
  *
  */
-public class JA3Constants {
+public final class JA3Constants {
 
     /**
      * Name of the SSLSession's application layer data binding for JA3 Digest value for the session.
@@ -23,6 +23,13 @@ public class JA3Constants {
      * @see javax.net.ssl.SSLSession#getValue(String)
      */
     public static final String JA3_FINGERPRINT = "ja3.digest";
+
+    /**
+     * Private constructor so that class is not initialized.
+     */
+    private JA3Constants() {
+
+    }
 
 }
 
