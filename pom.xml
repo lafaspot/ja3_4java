@@ -456,7 +456,7 @@
                             <propertyExpansion>config_loc=${main.basedir}</propertyExpansion>
                             <suppressionsLocation>checkstyle_suppressions.xml</suppressionsLocation>
                             <suppressionsFileExpression>checkstyle.suppressions.file</suppressionsFileExpression>
-                            <maxAllowedViolations>20</maxAllowedViolations>
+                            <maxAllowedViolations>25</maxAllowedViolations>
                         </configuration>
                         <goals>
                             <goal>check</goal>

@@ -23,7 +23,34 @@ public final class JA3Constants {
      * @see javax.net.ssl.SSLSession#getValue(String)
      */
     public static final String JA3_FINGERPRINT = "ja3.digest";
-
+	/**
+	 * Constant for the value 4.
+	 */
+	public static final int FOUR = 4;
+	/**
+	 * Constant value 3.
+	 */
+	public static final int THREE = 3;
+	/**
+	 * Constant value 8.
+	 */
+	public static final int EIGHT = 8;
+	/**
+	 * 
+	 */
+	public static final int SIXTEEN = 16;
+	/**
+	 * Constant value for new line.
+	 */
+	public static final byte NEWLINE = 0x0a;
+	/**
+	 * Constant value for vertical tab.
+	 */
+	public static final byte VERTICALTAB = 0x0b;
+	/**
+	 * 
+	 */
+	public static final int BITMASK = 0xFF;
     /**
      * Private constructor so that class is not initialized.
      */

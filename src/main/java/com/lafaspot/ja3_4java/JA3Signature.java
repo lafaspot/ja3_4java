@@ -45,7 +45,7 @@ public final class JA3Signature {
      */
     public static String ja3Signature(final ByteBuffer packet) {
         // Check there is enough remaining to be able to read TLS record header
-        if (packet.remaining() < 4) {
+        if (packet.remaining() < JA3Constants.FOUR) {
             return null;
         }
 
@@ -54,7 +54,7 @@ public final class JA3Signature {
             int off = packet.position();
 
             final byte messageType = getByte(packet, off, end);
-            off += 3; // skip TLS Major/Minor
+            off += JA3Constants.THREE; // skip TLS Major/Minor
 
             if (messageType != HANDSHAKE) {
                 return null; // not a handshake message
@@ -78,7 +78,7 @@ public final class JA3Signature {
             }
 
             final int handshakeLength = getUInt24(packet, off, end);
-            off += 3;
+            off += JA3Constants.THREE;
 
             if (end < off + handshakeLength) {
                 return null; // buffer underflow
@@ -108,7 +108,7 @@ public final class JA3Signature {
             off += cipherSuiteLength;
             ja3.append(',');
 
-            off += packet.get(off) + 3; // Skip Compression Methods and length of extensions
+            off += packet.get(off) + JA3Constants.THREE; // Skip Compression Methods and length of extensions
 
             final StringBuilder ec = new StringBuilder(); // elliptic curves
             final StringBuilder ecpf = new StringBuilder(); // elliptic curve point formats
@@ -140,24 +140,24 @@ public final class JA3Signature {
      * @param ec string builder to output the generated ja3 string for elliptic curves
      * @param ecpf string builder to output the generated ja3 string for elliptic curve points
      */
-    private static void parseExtensions(final ByteBuffer packet, int off, final int packetEnd, final StringBuilder ei, final StringBuilder ec,
+    private static void parseExtensions(final ByteBuffer packet, final int off, final int packetEnd, final StringBuilder ei, final StringBuilder ec,
             final StringBuilder ecpf) {
         boolean first = true;
+        int offset = off;
+        while (offset < packetEnd) {
+            int extensionType = getUInt16(packet, offset, packetEnd);
+            offset += 2;
+            int extensionLength = getUInt16(packet, offset, packetEnd);
+            offset += 2;
 
-        while (off < packetEnd) {
-            int extensionType = getUInt16(packet, off, packetEnd);
-            off += 2;
-            int extensionLength = getUInt16(packet, off, packetEnd);
-            off += 2;
-
-            if (extensionType == 0x0a) {
+            if (extensionType == JA3Constants.NEWLINE) {
                 // Elliptic curve points
-                int curveListLength = getUInt16(packet, off, packetEnd);
-                convertUInt16ArrayToJa3(packet, off + 2, off + 2 + curveListLength, ec);
-            } else if (extensionType == 0x0b) {
+                int curveListLength = getUInt16(packet, offset, packetEnd);
+                convertUInt16ArrayToJa3(packet, offset + 2, offset + 2 + curveListLength, ec);
+            } else if (extensionType == JA3Constants.VERTICALTAB) {
                 // Elliptic curve point formats
-                int curveFormatLength = packet.get(off) & 0xFF;
-                convertUInt8ArrayToJa3(packet, off + 1, off + 1 + curveFormatLength, ecpf);
+                int curveFormatLength = packet.get(offset) & JA3Constants.BITMASK;
+                convertUInt8ArrayToJa3(packet, offset + 1, offset + 1 + curveFormatLength, ecpf);
             }
 
             if (isNotGrease(extensionType)) {
@@ -168,7 +168,7 @@ public final class JA3Signature {
                 first = false;
             }
 
-            off += extensionLength;
+            offset += extensionLength;
         }
     }
 
@@ -204,10 +204,11 @@ public final class JA3Signature {
      * @param out string builder to output the generated JA3 string
      * @throws BufferUnderflowException when source packet does not have enough bytes to read
      */
-    private static void convertUInt16ArrayToJa3(final ByteBuffer source, int start, final int end, final StringBuilder out) {
+    private static void convertUInt16ArrayToJa3(final ByteBuffer source, final int start, final int end, final StringBuilder out) {
         boolean first = true;
-        for (; start < end; start += 2) {
-            int value = getUInt16(source, start, end);
+        int st = start;
+        for (; st < end; st += 2) {
+            int value = getUInt16(source, st, end);
             if (isNotGrease(value)) {
                 if (!first) {
                     out.append('-');
@@ -227,10 +228,11 @@ public final class JA3Signature {
      * @param out string builder to output the generated JA3 string
      * @throws BufferUnderflowException when source packet does not have enough bytes to read
      */
-    private static void convertUInt8ArrayToJa3(final ByteBuffer source, int start, final int end, final StringBuilder out) {
-        for (; start < end; start++) {
-            out.append(getByte(source, start, end));
-            if (start < end - 1) {
+    private static void convertUInt8ArrayToJa3(final ByteBuffer source, final int start, final int end, final StringBuilder out) {
+       int st = start;
+    	for (; st < end; st++) {
+            out.append(getByte(source, st, end));
+            if (st < end - 1) {
                 out.append('-');
             }
         }
@@ -246,11 +248,12 @@ public final class JA3Signature {
      * @throws BufferUnderflowException when source buffer does not have enough bytes to read
      */
     private static int getUInt24(final ByteBuffer source, final int start, final int end) {
-        if (start + 3 > end) {
+        if (start + JA3Constants.THREE > end) {
             throw new BufferUnderflowException();
         }
 
-        return ((source.get(start) & 0xFF) << 16) + ((source.get(start + 1) & 0xFF) << 8) + (source.get(start + 2) & 0xFF);
+        return ((source.get(start) & JA3Constants.BITMASK) << JA3Constants.SIXTEEN)
+        		+ ((source.get(start + 1) & JA3Constants.BITMASK) << JA3Constants.EIGHT) + (source.get(start + 2) & JA3Constants.BITMASK);
     }
 
     /**
@@ -267,7 +270,7 @@ public final class JA3Signature {
             throw new BufferUnderflowException();
         }
 
-        return ((source.get(start) & 0xFF) << 8) + (source.get(start + 1) & 0xFF);
+        return ((source.get(start) & JA3Constants.BITMASK) << JA3Constants.EIGHT) + (source.get(start + 1) & JA3Constants.BITMASK);
     }
 
     /**
@@ -287,4 +290,3 @@ public final class JA3Signature {
         return source.get(start);
     }
 }
-
