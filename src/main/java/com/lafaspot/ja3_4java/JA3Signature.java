@@ -58,20 +58,13 @@ public final class JA3Signature {
 
 
     /**
-     * Private constructor.
-     */
-    private JA3Signature() {
-        // prevent instantiation
-    }
-
-    /**
      * Calculate JA3 string from a ClientHello packet.Note that we do not compute an MD5 hash here.
      *
      * @param packet packet to inspect
      * @return JA3 fingerprint or null if no TLS ClientHello detected in given packet
      * @see <a href="https://github.com/salesforce/ja3">Original JA3 implementation</a>
      */
-    public static String ja3Signature(final ByteBuffer packet) {
+    public String ja3Signature(final ByteBuffer packet) {
         // Check there is enough remaining to be able to read TLS record header
         if (packet.remaining() < FOUR) {
             return null;
@@ -168,7 +161,7 @@ public final class JA3Signature {
      * @param ec string builder to output the generated ja3 string for elliptic curves
      * @param ecpf string builder to output the generated ja3 string for elliptic curve points
      */
-    private static void parseExtensions(final ByteBuffer packet, final int off, final int packetEnd, final StringBuilder ei, final StringBuilder ec,
+    private void parseExtensions(final ByteBuffer packet, final int off, final int packetEnd, final StringBuilder ei, final StringBuilder ec,
             final StringBuilder ecpf) {
         boolean first = true;
         int offset = off;
@@ -210,7 +203,7 @@ public final class JA3Signature {
      * @return false if value matches GREASE value, true otherwise
      * @see <a href="https://tools.ietf.org/html/draft-ietf-tls-grease">draft-ietf-tls-grease</a>
      */
-    private static boolean isNotGrease(final int value) {
+    private boolean isNotGrease(final int value) {
         for (int i = 0; i < GREASE.length; i++) {
             if (value == GREASE[i]) {
                 return false;
@@ -232,7 +225,7 @@ public final class JA3Signature {
      * @param out string builder to output the generated JA3 string
      * @throws BufferUnderflowException when source packet does not have enough bytes to read
      */
-    private static void convertUInt16ArrayToJa3(final ByteBuffer source, final int start, final int end, final StringBuilder out) {
+    private void convertUInt16ArrayToJa3(final ByteBuffer source, final int start, final int end, final StringBuilder out) {
         boolean first = true;
         int st = start;
         for (; st < end; st += 2) {
@@ -256,7 +249,7 @@ public final class JA3Signature {
      * @param out string builder to output the generated JA3 string
      * @throws BufferUnderflowException when source packet does not have enough bytes to read
      */
-    private static void convertUInt8ArrayToJa3(final ByteBuffer source, final int start, final int end, final StringBuilder out) {
+    private void convertUInt8ArrayToJa3(final ByteBuffer source, final int start, final int end, final StringBuilder out) {
        int st = start;
     	for (; st < end; st++) {
             out.append(getByte(source, st, end));
@@ -275,7 +268,7 @@ public final class JA3Signature {
      * @return unsigned integer
      * @throws BufferUnderflowException when source buffer does not have enough bytes to read
      */
-    private static int getUInt24(final ByteBuffer source, final int start, final int end) {
+    private int getUInt24(final ByteBuffer source, final int start, final int end) {
         if (start + THREE > end) {
             throw new BufferUnderflowException();
         }
@@ -293,7 +286,7 @@ public final class JA3Signature {
      * @return unsigned integer
      * @throws BufferUnderflowException when source buffer does not have enough bytes to read
      */
-    private static int getUInt16(final ByteBuffer source, final int start, final int end) {
+    private int getUInt16(final ByteBuffer source, final int start, final int end) {
         if (start + 2 > end) {
             throw new BufferUnderflowException();
         }
@@ -310,7 +303,7 @@ public final class JA3Signature {
      * @return a byte
      * @throws BufferUnderflowException when source buffer does not have enough bytes to read
      */
-    private static byte getByte(final ByteBuffer source, final int start, final int end) {
+    private byte getByte(final ByteBuffer source, final int start, final int end) {
         if (start + 1 > end) {
             throw new BufferUnderflowException();
         }

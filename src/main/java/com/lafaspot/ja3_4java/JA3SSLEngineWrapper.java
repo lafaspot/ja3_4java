@@ -47,7 +47,7 @@ public class JA3SSLEngineWrapper extends SSLEngine {
             String ja3 = null;
             final HandshakeStatus handshakeStatus = engine.getHandshakeStatus();
             if (HandshakeStatus.NOT_HANDSHAKING != handshakeStatus && HandshakeStatus.FINISHED != handshakeStatus) {
-                ja3 = JA3Signature.ja3Signature(src);
+                ja3 = new JA3Signature().ja3Signature(src);
             } else {
                 generatedJa3Signature = true;
             }
