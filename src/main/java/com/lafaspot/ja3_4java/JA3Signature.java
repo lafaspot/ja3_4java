@@ -21,21 +21,21 @@ public final class JA3Signature {
      */
     private static final byte CLIENT_HELLO_RANDOM_LEN = 32;
 	/**
-	 * Constant for the value 4.
+	 * Constant for minimum packet length.
 	 */
-	private static final int FOUR = 4;
+	private static final int MIN_PACKET_LENGTH = 4;
 	/**
 	 * Constant value 3.
 	 */
 	private static final int THREE = 3;
 	/**
-	 * Constant value 8.
+	 * Constant value for one byte size.
 	 */
-	private static final int EIGHT = 8;
+	private static final int ONE_BYTE = 8;
 	/**
 	 * Constant value 16.
 	 */
-	private static final int SIXTEEN = 16;
+	private static final int TWO_BYTES = 16;
 	/**
 	 * Constant value for new line.
 	 */
@@ -45,7 +45,7 @@ public final class JA3Signature {
 	 */
 	private static final byte VERTICALTAB = 0x0b;
 	/**
-	 * 
+	 * Constant value for bitmask i.e. 255.
 	 */
 	private static final int BITMASK = 0xFF;
 
@@ -66,7 +66,7 @@ public final class JA3Signature {
      */
     public String ja3Signature(final ByteBuffer packet) {
         // Check there is enough remaining to be able to read TLS record header
-        if (packet.remaining() < FOUR) {
+        if (packet.remaining() < MIN_PACKET_LENGTH) {
             return null;
         }
 
@@ -273,8 +273,8 @@ public final class JA3Signature {
             throw new BufferUnderflowException();
         }
 
-        return ((source.get(start) & BITMASK) << SIXTEEN)
-        		+ ((source.get(start + 1) & BITMASK) << EIGHT) + (source.get(start + 2) & BITMASK);
+        return ((source.get(start) & BITMASK) << TWO_BYTES)
+        		+ ((source.get(start + 1) & BITMASK) << ONE_BYTE) + (source.get(start + 2) & BITMASK);
     }
 
     /**
@@ -291,7 +291,7 @@ public final class JA3Signature {
             throw new BufferUnderflowException();
         }
 
-        return ((source.get(start) & BITMASK) << EIGHT) + (source.get(start + 1) & BITMASK);
+        return ((source.get(start) & BITMASK) << ONE_BYTE) + (source.get(start + 1) & BITMASK);
     }
 
     /**

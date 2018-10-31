@@ -1,7 +1,6 @@
 /**
- * 
- */
-/**
+ * Package to generate JA3 fingerprint for ssl clients.
+ *
  * @author ajathan
  *
  */
