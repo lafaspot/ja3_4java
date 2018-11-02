@@ -20,7 +20,15 @@ public class JA3SSLEngineWrapper extends SSLEngine {
      */
     private final SSLEngine engine;
 
-    private boolean generatedJa3Signature = false;
+    /**
+     * True if the ja3 signature has been set in the ssl session.
+     */
+    private boolean isJa3SignatureSet = false;
+    
+    /**
+     * Ja3 signature for the client.
+     */
+    private String ja3 = null;
 
     /**
      * Wrap an existing SSLEngine to add calculation of JA3 digest.
@@ -39,30 +47,35 @@ public class JA3SSLEngineWrapper extends SSLEngine {
 
     @Override
     public SSLEngineResult unwrap(final ByteBuffer src, final ByteBuffer[] dsts, final int offset, final int length) throws SSLException {
-        final SSLEngineResult result;
-        if (generatedJa3Signature) {
-            result = engine.unwrap(src, dsts, offset, length);
-        } else {
-            // Ensure no-one modifies the buffer underneath as per sun.security.ssl.SSLEngineImpl
-            String ja3 = null;
-            final HandshakeStatus handshakeStatus = engine.getHandshakeStatus();
-            if (HandshakeStatus.NOT_HANDSHAKING != handshakeStatus && HandshakeStatus.FINISHED != handshakeStatus) {
-                ja3 = new JA3Signature().ja3Signature(src);
-            } else {
-                generatedJa3Signature = true;
-            }
+		final SSLEngineResult result;
+		if (ja3 == null) {
+			//1. Generate JA3 signature
+			final HandshakeStatus handshakeStatus = engine.getHandshakeStatus();
+			if (HandshakeStatus.FINISHED != handshakeStatus) {
+				ja3 = new JA3Signature().ja3Signature(src);
+			}
+			
+			//unwrap
+			result = engine.unwrap(src, dsts, offset, length);
+		} else if (!isJa3SignatureSet) {
+			//2. Set ja3 signature in ssl handshake session
+			
+			//unwrap
+			result = engine.unwrap(src, dsts, offset, length);
+			
+			final SSLSession handshakeSession = engine.getHandshakeSession();
+			if (handshakeSession != null) {
+				//set ja3 signature in handshake session
+				handshakeSession.putValue(JA3Constants.JA3_FINGERPRINT, ja3);
+				isJa3SignatureSet = true;
+			}
+		} else {
+			//3. JA3 Signature is set in the handshake session, call engine.unwrap
+			//unwrap
+			result = engine.unwrap(src, dsts, offset, length);
+		}
 
-            result = engine.unwrap(src, dsts, offset, length);
-
-            if (ja3 != null) {
-                // no lock needed, it is fine if we write same digest multiple times
-                engine.getSession().putValue(JA3Constants.JA3_FINGERPRINT, ja3);
-                generatedJa3Signature = true;
-            }
-        }
-
-
-        return result;
+		return result;
     }
 
     /* Wrapped methods */
