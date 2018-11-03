@@ -48,31 +48,31 @@ public class JA3SSLEngineWrapper extends SSLEngine {
     @Override
     public SSLEngineResult unwrap(final ByteBuffer src, final ByteBuffer[] dsts, final int offset, final int length) throws SSLException {
 		final SSLEngineResult result;
-		if (ja3 == null) {
-			//1. Generate JA3 signature
+		if (isJa3SignatureSet) {
+			// 1. JA3 Signature is set in the handshake session, call engine.unwrap
+			// unwrap
+			result = engine.unwrap(src, dsts, offset, length);
+		} else if (ja3 == null) {
+			// 2. Generate JA3 signature
 			final HandshakeStatus handshakeStatus = engine.getHandshakeStatus();
 			if (HandshakeStatus.FINISHED != handshakeStatus) {
 				ja3 = new JA3Signature().ja3Signature(src);
 			}
-			
-			//unwrap
+
+			// unwrap
 			result = engine.unwrap(src, dsts, offset, length);
-		} else if (!isJa3SignatureSet) {
-			//2. Set ja3 signature in ssl handshake session
-			
-			//unwrap
+		} else {
+			// 3. Set ja3 signature in ssl handshake session
+
+			// unwrap
 			result = engine.unwrap(src, dsts, offset, length);
-			
+
 			final SSLSession handshakeSession = engine.getHandshakeSession();
 			if (handshakeSession != null) {
-				//set ja3 signature in handshake session
+				// set ja3 signature in handshake session
 				handshakeSession.putValue(JA3Constants.JA3_FINGERPRINT, ja3);
 				isJa3SignatureSet = true;
 			}
-		} else {
-			//3. JA3 Signature is set in the handshake session, call engine.unwrap
-			//unwrap
-			result = engine.unwrap(src, dsts, offset, length);
 		}
 
 		return result;
