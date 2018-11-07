@@ -23,12 +23,12 @@ public class JA3SSLEngineWrapper extends SSLEngine {
     /**
      * True if the ja3 signature has been set in the ssl session.
      */
-    private boolean isJa3SignatureSet = false;
-    
+    private boolean ja3Done = false;
+
     /**
      * Ja3 signature for the client.
      */
-    private String ja3 = null;
+    private String ja3Signature = null;
 
     /**
      * Wrap an existing SSLEngine to add calculation of JA3 digest.
@@ -47,35 +47,26 @@ public class JA3SSLEngineWrapper extends SSLEngine {
 
     @Override
     public SSLEngineResult unwrap(final ByteBuffer src, final ByteBuffer[] dsts, final int offset, final int length) throws SSLException {
-		final SSLEngineResult result;
-		if (isJa3SignatureSet) {
-			// 1. JA3 Signature is set in the handshake session, call engine.unwrap
-			// unwrap
-			result = engine.unwrap(src, dsts, offset, length);
-		} else if (ja3 == null) {
-			// 2. Generate JA3 signature
-			final HandshakeStatus handshakeStatus = engine.getHandshakeStatus();
-			if (HandshakeStatus.FINISHED != handshakeStatus) {
-				ja3 = new JA3Signature().ja3Signature(src);
-			}
-
-			// unwrap
-			result = engine.unwrap(src, dsts, offset, length);
-		} else {
-			// 3. Set ja3 signature in ssl handshake session
-
-			// unwrap
-			result = engine.unwrap(src, dsts, offset, length);
-
-			final SSLSession handshakeSession = engine.getHandshakeSession();
-			if (handshakeSession != null) {
-				// set ja3 signature in handshake session
-				handshakeSession.putValue(JA3Constants.JA3_FINGERPRINT, ja3);
-				isJa3SignatureSet = true;
+		if (!ja3Done) {
+			if (ja3Signature != null) {
+				final SSLSession handshakeSession = engine.getHandshakeSession();
+				if (handshakeSession != null) {
+					// Set ja3 signature in handshake session
+					handshakeSession.putValue(JA3Constants.JA3_FINGERPRINT, ja3Signature);
+					ja3Done = true;
+				}
+			} else {
+				// 1. Generate JA3 signature
+				final HandshakeStatus handshakeStatus = engine.getHandshakeStatus();
+				if (HandshakeStatus.FINISHED == handshakeStatus) {
+					ja3Done = true;
+				} else {
+					ja3Signature = new JA3Signature().ja3Signature(src);
+				}
 			}
 		}
 
-		return result;
+		return engine.unwrap(src, dsts, offset, length);
     }
 
     /* Wrapped methods */
