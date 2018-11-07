@@ -4,7 +4,7 @@
 	<modelVersion>4.0.0</modelVersion>
 	<groupId>com.github.lafa.ja3_4java</groupId>
 	<artifactId>ja3_4java</artifactId>
-	<version>0.0.1</version>
+	<version>0.0.2</version>
 	<name>ja3_4java</name>
 	<packaging>jar</packaging>
 	<url>https://github.com/lafaspot/ja3_4java</url>
