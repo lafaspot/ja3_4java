@@ -9,45 +9,64 @@ import java.nio.ByteBuffer;
  */
 public final class JA3Signature {
     /**
-     * Handshake byte.
+     * Handshake identifier.
      */
     private static final byte HANDSHAKE = 22;
+
     /**
      * Client hello.
      */
     private static final byte CLIENT_HELLO = 1;
+
     /**
-     * Client hello random lenght.
+     * Client hello random length.
      */
     private static final byte CLIENT_HELLO_RANDOM_LEN = 32;
-	/**
-	 * Constant for minimum packet length.
-	 */
-	private static final int MIN_PACKET_LENGTH = 4;
-	/**
-	 * Constant value 3.
-	 */
-	private static final int THREE = 3;
-	/**
-	 * Constant value for one byte size.
-	 */
-	private static final int ONE_BYTE = 8;
-	/**
-	 * Constant value 16.
-	 */
-	private static final int TWO_BYTES = 16;
-	/**
-	 * Constant value for new line.
-	 */
-	private static final byte NEWLINE = 0x0a;
-	/**
-	 * Constant value for vertical tab.
-	 */
-	private static final byte VERTICALTAB = 0x0b;
-	/**
-	 * Constant value for bitmask i.e. 255.
-	 */
-	private static final int BITMASK = 0xFF;
+
+    /**
+     * Minimum packet length to build JA3 signature.
+     */
+    private static final int MIN_PACKET_LENGTH = 4;
+
+    /**
+     * Number of bytes used to identify the SSL Version Length in payload.
+     */
+    private static final int SSL_VERSION_LENGTH = 3;
+
+    /**
+     * Number of bits in byte.
+     */
+    private static final int ONE_BYTE = 8;
+
+    /**
+     * Number of bits in 2 bytes.
+     */
+    private static final int TWO_BYTES = 16;
+
+    /**
+     * Bytes in 16 bit unsigned integer.
+     */
+    private static final int UINT16_LENGTH = 2;
+
+    /**
+     * Bytes in 24 bit unsigned integer.
+     */
+    private static final int UINT24_LENGTH = 3;
+
+    /**
+     * Newline character.
+     */
+    private static final byte NEWLINE = 0x0a;
+
+    /**
+     * Vertical Tab character.
+     */
+    private static final byte VERTICALTAB = 0x0b;
+
+    /**
+     * Byte bit mask.
+     */
+    private static final int BITMASK = 0xFF;
 
     /**
      * Values to account for GREASE (Generate Random Extensions And Sustain Extensibility) as described here:
@@ -55,7 +74,6 @@ public final class JA3Signature {
      */
     private static final int[] GREASE = new int[] { 0x0a0a, 0x1a1a, 0x2a2a, 0x3a3a, 0x4a4a, 0x5a5a, 0x6a6a, 0x7a7a, 0x8a8a, 0x9a9a, 0xaaaa, 0xbaba,
             0xcaca, 0xdada, 0xeaea, 0xfafa };
-
 
     /**
      * Calculate JA3 string from a ClientHello packet.Note that we do not compute an MD5 hash here.
@@ -75,14 +93,14 @@ public final class JA3Signature {
             int off = packet.position();
 
             final byte messageType = getByte(packet, off, end);
-            off += THREE; // skip TLS Major/Minor
+            off += SSL_VERSION_LENGTH; // skip TLS Major/Minor
 
             if (messageType != HANDSHAKE) {
                 return null; // not a handshake message
             }
 
             final int length = getUInt16(packet, off, end);
-            off += 2;
+            off += UINT16_LENGTH;
 
             if (end < off + length) {
                 return null; // buffer underflow
@@ -99,7 +117,7 @@ public final class JA3Signature {
             }
 
             final int handshakeLength = getUInt24(packet, off, end);
-            off += THREE;
+            off += SSL_VERSION_LENGTH;
 
             if (end < off + handshakeLength) {
                 return null; // buffer underflow
@@ -109,12 +127,12 @@ public final class JA3Signature {
 
             final int clientVersion = getUInt16(packet, off, end);
             // Skip random
-            off += 2 + CLIENT_HELLO_RANDOM_LEN;
+            off += UINT16_LENGTH + CLIENT_HELLO_RANDOM_LEN;
 
             off += packet.get(off) + 1; // Skip Session ID
 
             final int cipherSuiteLength = getUInt16(packet, off, end);
-            off += 2;
+            off += UINT16_LENGTH;
 
             if (cipherSuiteLength % 2 != 0) {
                 return null; // invalid packet, cipher suite length must always be even
@@ -129,7 +147,7 @@ public final class JA3Signature {
             off += cipherSuiteLength;
             ja3.append(',');
 
-            off += packet.get(off) + THREE; // Skip Compression Methods and length of extensions
+            off += packet.get(off) + SSL_VERSION_LENGTH; // Skip Compression Methods and length of extensions
 
             final StringBuilder ec = new StringBuilder(); // elliptic curves
             final StringBuilder ecpf = new StringBuilder(); // elliptic curve point formats
@@ -167,14 +185,14 @@ public final class JA3Signature {
         int offset = off;
         while (offset < packetEnd) {
             int extensionType = getUInt16(packet, offset, packetEnd);
-            offset += 2;
+            offset += UINT16_LENGTH;
             int extensionLength = getUInt16(packet, offset, packetEnd);
-            offset += 2;
+            offset += UINT16_LENGTH;
 
             if (extensionType == NEWLINE) {
                 // Elliptic curve points
                 int curveListLength = getUInt16(packet, offset, packetEnd);
-                convertUInt16ArrayToJa3(packet, offset + 2, offset + 2 + curveListLength, ec);
+                convertUInt16ArrayToJa3(packet, offset + UINT16_LENGTH, offset + UINT16_LENGTH + curveListLength, ec);
             } else if (extensionType == VERTICALTAB) {
                 // Elliptic curve point formats
                 int curveFormatLength = packet.get(offset) & BITMASK;
@@ -228,7 +246,7 @@ public final class JA3Signature {
     private void convertUInt16ArrayToJa3(final ByteBuffer source, final int start, final int end, final StringBuilder out) {
         boolean first = true;
         int st = start;
-        for (; st < end; st += 2) {
+        for (; st < end; st += UINT16_LENGTH) {
             int value = getUInt16(source, st, end);
             if (isNotGrease(value)) {
                 if (!first) {
@@ -251,7 +269,7 @@ public final class JA3Signature {
      */
     private void convertUInt8ArrayToJa3(final ByteBuffer source, final int start, final int end, final StringBuilder out) {
        int st = start;
-    	for (; st < end; st++) {
+        for (; st < end; st++) {
             out.append(getByte(source, st, end));
             if (st < end - 1) {
                 out.append('-');
@@ -265,16 +283,16 @@ public final class JA3Signature {
      * @param source buffer to read from
      * @param start start offset of integer in buffer
      * @param end end offset of integer in buffer
-     * @return unsigned integer
+     * @return 24-bit integer from network
      * @throws BufferUnderflowException when source buffer does not have enough bytes to read
      */
     private int getUInt24(final ByteBuffer source, final int start, final int end) {
-        if (start + THREE > end) {
+        if (start + UINT24_LENGTH > end) {
             throw new BufferUnderflowException();
         }
 
         return ((source.get(start) & BITMASK) << TWO_BYTES)
-        		+ ((source.get(start + 1) & BITMASK) << ONE_BYTE) + (source.get(start + 2) & BITMASK);
+                + ((source.get(start + 1) & BITMASK) << ONE_BYTE) + (source.get(start + 2) & BITMASK);
     }
 
     /**
@@ -287,7 +305,7 @@ public final class JA3Signature {
      * @throws BufferUnderflowException when source buffer does not have enough bytes to read
      */
     private int getUInt16(final ByteBuffer source, final int start, final int end) {
-        if (start + 2 > end) {
+        if (start + UINT16_LENGTH > end) {
             throw new BufferUnderflowException();
         }
 

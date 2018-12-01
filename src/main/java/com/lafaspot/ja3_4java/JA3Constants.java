@@ -14,8 +14,8 @@ public final class JA3Constants {
      * Example usage:
      *
      * <pre>
+     * &#064;code
      * {
-     *     &#064;code
      *     String ja3Digest = sslSession.getValue(JA3Constants.JA3_FINGERPRINT);
      * }
      * </pre>
@@ -23,11 +23,11 @@ public final class JA3Constants {
      * @see javax.net.ssl.SSLSession#getValue(String)
      */
     public static final String JA3_FINGERPRINT = "ja3.digest";
+
     /**
      * Private constructor so that class is not initialized.
      */
     private JA3Constants() {
-
     }
 
 }
