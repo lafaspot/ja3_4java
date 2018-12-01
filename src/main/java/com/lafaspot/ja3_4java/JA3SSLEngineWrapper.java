@@ -10,8 +10,7 @@ import javax.net.ssl.SSLException;
 import javax.net.ssl.SSLSession;
 
 /**
- * This class wraps an SSLEngine and adds JA3 fingerprinting capability to it.
- *
+ * This class wraps {@link SSLEngine} implementation and stores JA3 finger print to the handshake {@link SSLSession}.
  */
 public class JA3SSLEngineWrapper extends SSLEngine {
 
@@ -21,12 +20,12 @@ public class JA3SSLEngineWrapper extends SSLEngine {
     private final SSLEngine engine;
 
     /**
-     * True if the ja3 signature has been set in the ssl session.
+     * True if the ja3 signature has been set in the {@link SSLSession}.
      */
     private boolean ja3Done = false;
 
     /**
-     * Ja3 signature for the client.
+     * JA3 signature for the client.
      */
     private String ja3Signature = null;
 
@@ -47,30 +46,29 @@ public class JA3SSLEngineWrapper extends SSLEngine {
 
     @Override
     public SSLEngineResult unwrap(final ByteBuffer src, final ByteBuffer[] dsts, final int offset, final int length) throws SSLException {
-		if (!ja3Done) {
-			if (ja3Signature != null) {
-				final SSLSession handshakeSession = engine.getHandshakeSession();
-				if (handshakeSession != null) {
-					// Set ja3 signature in handshake session
-					handshakeSession.putValue(JA3Constants.JA3_FINGERPRINT, ja3Signature);
-					ja3Done = true;
-				}
-			} else {
-				// 1. Generate JA3 signature
-				final HandshakeStatus handshakeStatus = engine.getHandshakeStatus();
-				if (HandshakeStatus.FINISHED == handshakeStatus) {
-					ja3Done = true;
-				} else {
-					ja3Signature = new JA3Signature().ja3Signature(src);
-				}
-			}
-		}
+        if (!ja3Done) {
+            if (ja3Signature != null) {
+                final SSLSession handshakeSession = engine.getHandshakeSession();
+                if (handshakeSession != null) {
+                    // Set ja3 signature in handshake session
+                    handshakeSession.putValue(JA3Constants.JA3_FINGERPRINT, ja3Signature);
+                    ja3Done = true;
+                }
+            } else {
+                // 1. Generate JA3 signature
+                final HandshakeStatus handshakeStatus = engine.getHandshakeStatus();
+                if (HandshakeStatus.FINISHED == handshakeStatus) {
+                    ja3Done = true;
+                } else {
+                    ja3Signature = new JA3Signature().ja3Signature(src);
+                }
+            }
+        }
 
-		return engine.unwrap(src, dsts, offset, length);
+        return engine.unwrap(src, dsts, offset, length);
     }
 
     /* Wrapped methods */
-
     @Override
     public void beginHandshake() throws SSLException {
         engine.beginHandshake();
