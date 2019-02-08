@@ -1,3 +1,8 @@
+/**
+ *  Copyright 2019, Oath Inc.
+ *  Licensed under the terms of the Apache 2.0 license.
+ *  See LICENSE file in {@link https://github.com/lafaspot/ja3_4java/blob/master/LICENSE} for terms.
+ */
 package com.lafaspot.ja3_4java;
 
 import java.nio.BufferUnderflowException;
